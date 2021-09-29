@@ -160,3 +160,4 @@ class ListUserView(APIView):
             return Response(employee.data)
         except:
             return Response({ 'error': 'Algo salió mal al listar los Usuarios' })
+
