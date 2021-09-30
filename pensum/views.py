@@ -1,13 +1,20 @@
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_protect
+from django.utils.decorators import method_decorator
+from rest_framework.views import APIView
 
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework import permissions
 
 from rest_framework import generics
 from rest_framework.serializers import Serializer
 
+from rest_framework.parsers import FormParser,MultiPartParser
+
 from pensum.models import *
 from pensum.serializers import *
+
 
 #PROGRAM
 #LISTADO
@@ -28,6 +35,7 @@ class ProgramCreateAPIView(generics.CreateAPIView):
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
 
 #CONSULTA ESPECIFICA
 class ProgramDetailAPIView(generics.RetrieveAPIView):
@@ -90,12 +98,18 @@ class PensumListAPIView(generics.ListAPIView):
 #CREAR
 class PensumCreateAPIView(generics.CreateAPIView):
     serializer_class = PensumSerializer
-
+    parser_classes = [MultiPartParser,FormParser]
     def post(self,request):
+        print("here")
         serializer = self.serializer_class(data = request.data)
+        print(str(request.data))
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
+        # else:
+        #     print("ya tu sabes")
+        #     return Response(serializer.data, status = status.HTTP_201_CREATED)
+        print(serializer.is_valid())
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 #CONSULTA ESPECIFICA

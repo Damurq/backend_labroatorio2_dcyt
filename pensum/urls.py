@@ -3,6 +3,7 @@ from rest_framework import views
 from pensum.views import *
 
 
+
 urlpatterns = [
     path('program/list/', ProgramListAPIView.as_view(), name = 'program_list'),
     path('program/create/', ProgramCreateAPIView.as_view(), name = 'program_create'),
