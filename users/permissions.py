@@ -7,13 +7,15 @@ class IsAuthenticatedAndAdminUser(permissions.BasePermission):
 
       def has_permission(self, request, view):
         if request.user.is_authenticated:
-            return True if request.user.employee.role == "A" else False
+            return request.user.employee.role == "A"
+      return False
 
 class IsAuthenticatedAndNotAdminUser(permissions.BasePermission):
 
       def has_permission(self, request, view):
         if request.user.is_authenticated:
-            return True if request.user.employee.role == "G" else False
+            return request.user.employee.role == "G"
+      return False
 
 class AllowAnyUser(permissions.BasePermission):
 
