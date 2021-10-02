@@ -18,79 +18,43 @@ from pensum.serializers import *
 
 from users.permissions import *
 
-#PROGRAM
-#LISTADO
-class ProgramListAPIView(generics.ListAPIView):
+class ProgramList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
-
+    queryset = Program.objects.all()
     serializer_class = ProgramSerializer
-    def get_queryset(self):
-        return self.get_serializer().Meta.model.objects.filter(is_active = True)
 
-#CREAR
-class ProgramCreateAPIView(generics.CreateAPIView):
+
+class ProgramDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
+    queryset = Program.objects.all()
     serializer_class = ProgramSerializer
-    def post(self,request):
-        serializer = self.serializer_class(data = request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status = status.HTTP_201_CREATED)
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-
-
-#CONSULTA ESPECIFICA
-class ProgramDetailAPIView(generics.RetrieveAPIView):
-    serializer_class = ProgramSerializer
-    def get_queryset(self):
-        return self.get_serializer().Meta.model.objects.filter()
-
-#ACTUALIZACION
-class ProgramUpdateAPIView(generics.UpdateAPIView):
-    serializer_class = ProgramSerializer
-
-    def get_queryset(self, pk):
-        return self.get_serializer().Meta.model.objects.filter(code = pk).first()
-
-    def patch(self,request,pk=None):
-        if self.get_queryset(pk):
-            program_serializer = self.serializer_class(self.get_queryset(pk))
-            return Response(program_serializer.data,status = status.HTTP_200_OK)
-        return Response({'message': 'No existe un programa con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
-
-    def put(self,request,pk=None):
-        if self.get_queryset(pk):
-            program_serializer = self.serializer_class(self.get_queryset(pk), data = request.data)
-            if program_serializer.is_valid():
-                program_serializer.save()
-                return Response(program_serializer.data, status = status.HTTP_201_CREATED)
-        return Response(program_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-
-#CAMBIO DE ESTADO
-class ProgramChangeStateAPIView(generics.DestroyAPIView):
-    serializer_class = ProgramSerializer
-
-    def get_queryset(self):
-        return self.get_serializer().Meta.model.objects.filter()
 
     def delete(self, request, pk):
         program = self.get_queryset().filter(code = pk).first()
         if program:
             if program.is_active == True:
+                pensum = Pensum.objects.filter(program_code = pk, is_active = True).first()
+                pensum.is_active = False
+                pensum.save()
+
                 program.is_active = False
                 program.save()
-                return Response({'message': '¡Programa desactivado correctamente!'}, status = status.HTTP_200_OK)
+                return Response({'message': '¡Programa y Pensum asociado desactivados correctamente!'}, status = status.HTTP_200_OK)
             elif program.is_active == False:
+                pensum = Pensum.objects.filter(program_code = pk, is_active = False).last()
+                pensum.is_active = True
+                pensum.save()
+
                 program.is_active = True
                 program.save()
-                return Response({'message': '¡Programa activado correctamente!'}, status = status.HTTP_200_OK)
+                return Response({'message': '¡Programa y ultimo pensum asociado activado correctamente!'}, status = status.HTTP_200_OK)
         return Response({'message': 'No existe un programa con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
 
 
+class PensumList(generics.ListCreateAPIView):
+    queryset = Pensum.objects.all()
+    serializer_class = PensumSerializer
 
-#PENSUM
-#LISTADO
-class PensumListAPIView(generics.ListAPIView):
     def get(self, request, format=None):
         user = self.request.user
         emp=Employee.objects.get(user=user.id)
@@ -107,83 +71,30 @@ class PensumListAPIView(generics.ListAPIView):
             except:
                 return Response({ 'error': 'Algo salió mal al listar los pensum' })
 
-
-#LISTADO2
-class PensumListaAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticatedAndAdminUser, ]
-    def get(self, request, format=None):
-        user = self.request.user
-        emp=Employee.objects.get(user=user.id)
-        
-        try:    
-            pensum= Pensum.objects.all()
-            pensum= PensumSerializer(pensum,many=True)
-            return Response(pensum.data)
-        except:
-            return Response({ 'error': 'Algo salió mal al listar los pensum' })
-            
-    permission_classes = [IsAuthenticatedAndNotAdminUser, ]
-    def get(self, request, format=None):
-        user = self.request.user
-        try:
-                emp=Employee.objects.get(user=user.id)
-                pensum=Pensum.objects.filter(program_code=emp.program_code)
-                pensum = PensumSerializer(pensum, many=True)
-                return Response(pensum.data)
-        except:
-                return Response({ 'error': 'Algo salió mal al listar los pensum' })
-#CREAR
-class PensumCreateAPIView(generics.CreateAPIView):
-    serializer_class = PensumSerializer
-    parser_classes = [MultiPartParser,FormParser]
     def post(self,request):
-        print("here")
         serializer = self.serializer_class(data = request.data)
-        print(str(request.data))
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status = status.HTTP_201_CREATED)
-        # else:
-        #     print("ya tu sabes")
-        #     return Response(serializer.data, status = status.HTTP_201_CREATED)
-        print(serializer.is_valid())
+            codeP = request.data['program_code']
+            active_code_program = Program.objects.filter(is_active = False, code = codeP).first()
+            if active_code_program:
+                return Response({'message': 'el programa asociado al pensum se encuentra inactivo'}, status = status.HTTP_400_BAD_REQUEST)
+            else:
+                pensum_anterior = Pensum.objects.filter(is_active = True, program_code = codeP).first()
+                if pensum_anterior:
+                    pensum_anterior.is_active = False
+                    pensum_anterior.save()
+                    serializer.save()
+                    return Response(serializer.data, status = status.HTTP_201_CREATED)
+                else:
+                    serializer.save()
+                    return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+            
 
-#CONSULTA ESPECIFICA
-class PensumDetailAPIView(generics.RetrieveAPIView):
+
+class PensumDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Pensum.objects.all()
     serializer_class = PensumSerializer
-
-    def get_queryset(self):
-        return self.get_serializer().Meta.model.objects.filter()
-
-
-#ACTUALIZACION
-class PensumUpdateAPIView(generics.UpdateAPIView):
-    serializer_class = PensumSerializer
-
-    def get_queryset(self, pk):
-        return self.get_serializer().Meta.model.objects.filter(code = pk).first()
-
-    def patch(self,request,pk=None):
-        if self.get_queryset(pk):
-            pensum_serializer = self.serializer_class(self.get_queryset(pk))
-            return Response(pensum_serializer.data,status = status.HTTP_200_OK)
-        return Response({'message': 'No existe un pensum con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
-
-    def put(self,request,pk=None):
-        if self.get_queryset(pk):
-            pensum_serializer = self.serializer_class(self.get_queryset(pk), data = request.data)
-            if pensum_serializer.is_valid():
-                pensum_serializer.save()
-                return Response(pensum_serializer.data, status = status.HTTP_201_CREATED)
-        return Response(pensum_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-
-#CAMBIO DE ESTADO
-class PensumChangeStateAPIView(generics.DestroyAPIView):
-    serializer_class = PensumSerializer
-
-    def get_queryset(self):
-        return self.get_serializer().Meta.model.objects.filter()
 
     def delete(self, request, pk):
         pensum = self.get_queryset().filter(code = pk).first()
@@ -199,92 +110,28 @@ class PensumChangeStateAPIView(generics.DestroyAPIView):
         return Response({'message': 'No existe un pensum con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
 
 
-        
+class NumberPensumProgram(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    
+    def get(self, request, pk):
+        program = Program.objects.filter(code = pk).first()
 
-""""
-@api_view(['GET', 'POST'])
-def program_api_view(request):
-
-    if request.method == 'GET':
-        
-        program = Program.objects.all()
-        program_serializer = ProgramSerializer(program, many = True)
-        return Response(program_serializer.data, status = status.HTTP_200_OK)
-
-    elif request.method == 'POST':
-
-        program_serializer = ProgramSerializer(data = request.data)
-        if program_serializer.is_valid():
-            program_serializer.save()
-            return Response(program_serializer.data, status = status.HTTP_201_CREATED)
-        return Response(program_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+        if program:
+            pensum = Pensum.objects.filter(program_code = pk).count()
+            number_pensum ={
+                'name_Pro': program.name,
+                'count': pensum
+            }
+            count_serializer = CountSerializer(data = number_pensum)
+            if count_serializer.is_valid():
+                return Response(count_serializer.data, status = status.HTTP_200_OK)
+        return Response({'message': 'No se ha encontrado un programa con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
-def program_detail_api_view(request, pk):
+class ProgramPensumListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    serializer_class = ProgramPensumSerializer
 
-    program = Program.objects.filter(code = pk).first()
+    def get_queryset(self):
+        return Pensum.objects.select_related("program_code")
 
-    if program:
-
-        if request.method == 'GET':
-            program_serializer = ProgramSerializer(program)
-            return Response(program_serializer.data, status = status.HTTP_200_OK)
-
-        elif request.method == 'PUT':
-            program_serializer = ProgramSerializer(program, data = request.data)
-            if program_serializer.is_valid():
-                program_serializer.save()
-                return Response(program_serializer.data, status = status.HTTP_200_OK)
-            return Response(program_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        
-        elif request.method == 'DELETE':
-            program.delete()
-            return Response({'message': '¡Programa eliminado de forma exitosa!'}, status = status.HTTP_200_OK)
-
-    return Response({'message': 'No se ha encontrado un programa con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET', 'POST'])
-def pensum_api_view(request):
-
-    if request.method == 'GET':
-        
-        pensum = Pensum.objects.all()
-        pensum_serializer = PensumSerializer(pensum, many = True)
-        return Response(pensum_serializer.data, status = status.HTTP_200_OK)
-
-    elif request.method == 'POST':
-
-        pensum_serializer = PensumSerializer(data = request.data)
-        if pensum_serializer.is_valid():
-            pensum_serializer.save()
-            return Response(pensum_serializer.data, status = status.HTTP_201_CREATED)
-        return Response(pensum_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(['GET', 'PUT', 'DELETE'])
-def pensum_detail_api_view(request, pk):
-
-    pensum = Pensum.objects.filter(code = pk).first()
-
-    if pensum:
-
-        if request.method == 'GET':
-            pensum_serializer = PensumSerializer(pensum)
-            return Response(pensum_serializer.data, status = status.HTTP_200_OK)
-
-        elif request.method == 'PUT':
-            pensum_serializer = PensumSerializer(pensum, data = request.data)
-            if pensum_serializer.is_valid():
-                pensum_serializer.save()
-                return Response(pensum_serializer.data, status = status.HTTP_200_OK)
-            return Response(pensum_serializer.errors, status = status.HTTP_400_BAD_REQUEST)
-        
-        elif request.method == 'DELETE':
-            pensum.delete()
-            return Response({'message': '¡Pensum eliminado de forma exitosa!'}, status = status.HTTP_200_OK)
-
-    return Response({'message': 'No se ha encontrado un pensum con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
-
-"""
