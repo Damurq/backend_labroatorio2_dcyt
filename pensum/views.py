@@ -1,3 +1,4 @@
+from users.models import Employee
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.utils.decorators import method_decorator
@@ -15,16 +16,20 @@ from rest_framework.parsers import FormParser,MultiPartParser
 from pensum.models import *
 from pensum.serializers import *
 
+from users.permissions import *
 
 #PROGRAM
 #LISTADO
 class ProgramListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+
     serializer_class = ProgramSerializer
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter(is_active = True)
 
 #CREAR
 class ProgramCreateAPIView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
     serializer_class = ProgramSerializer
     def post(self,request):
         serializer = self.serializer_class(data = request.data)
@@ -86,11 +91,47 @@ class ProgramChangeStateAPIView(generics.DestroyAPIView):
 #PENSUM
 #LISTADO
 class PensumListAPIView(generics.ListAPIView):
-    serializer_class = PensumSerializer
+    def get(self, request, format=None):
+        user = self.request.user
+        emp=Employee.objects.get(user=user.id)
+        if emp.role=="A":
+            pensum= Pensum.objects.all()
+            pensum= PensumSerializer(pensum,many=True)
+            return Response(pensum.data)
+        elif emp.role=="G": 
+            try:
+                emp=Employee.objects.get(user=user.id)
+                pensum=Pensum.objects.filter(program_code=emp.program_code)
+                pensum = PensumSerializer(pensum, many=True)
+                return Response(pensum.data)
+            except:
+                return Response({ 'error': 'Algo salió mal al listar los pensum' })
 
-    def get_queryset(self):
-        return Pensum.objects.all()
 
+#LISTADO2
+class PensumListaAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    def get(self, request, format=None):
+        user = self.request.user
+        emp=Employee.objects.get(user=user.id)
+        
+        try:    
+            pensum= Pensum.objects.all()
+            pensum= PensumSerializer(pensum,many=True)
+            return Response(pensum.data)
+        except:
+            return Response({ 'error': 'Algo salió mal al listar los pensum' })
+            
+    permission_classes = [IsAuthenticatedAndNotAdminUser, ]
+    def get(self, request, format=None):
+        user = self.request.user
+        try:
+                emp=Employee.objects.get(user=user.id)
+                pensum=Pensum.objects.filter(program_code=emp.program_code)
+                pensum = PensumSerializer(pensum, many=True)
+                return Response(pensum.data)
+        except:
+                return Response({ 'error': 'Algo salió mal al listar los pensum' })
 #CREAR
 class PensumCreateAPIView(generics.CreateAPIView):
     serializer_class = PensumSerializer

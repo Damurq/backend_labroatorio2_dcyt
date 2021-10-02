@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect, csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib import auth
+from .permissions import *
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 
@@ -25,6 +26,7 @@ class CustomAuthToken(ObtainAuthToken):
             'role': employee.role,
             'photo': str(employee.photo),
         })
+
 #---------------------Vistas Genericas------------------------------
 class EmployeeList(generics.ListCreateAPIView):
     queryset = Employee.objects.all()
@@ -60,7 +62,7 @@ class CheckAuthenticatedView(APIView):
 
 @method_decorator(csrf_protect, name='dispatch')
 class SignupView(APIView):
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
     def post(self, request, format=None):
         data = self.request.data
         first_name= data['first_name']
@@ -86,13 +88,16 @@ class SignupView(APIView):
                         user = User.objects.get(id=user.id)                        
                         program = Program.objects.get(id=program_code)
                         emp = Employee.objects.create(
+                            code="",
                             first_name=first_name,
                             last_name=last_name,
-                            user=user,
-                            program_code = program,
                             role=role,
                             address=address,
-                            phone=phone
+                            phone=phone,
+                            photo="",
+                            estatus="1",
+                            user=user,
+                            program_code = program
                         )
                         emp.save()               
                         return Response({ 'success': 'Usuario creado con exito' })
@@ -120,7 +125,7 @@ class LoginView(APIView):
             else:
                 return Response({ 'error': 'Error de autenticación' })
         except:
-            return Response({ 'error': 'Something went wrong when logging in' })
+            return Response({ 'error': 'Algo salió mal al iniciar sesión' })
 
 class LogoutView(APIView):
     def post(self, request, format=None):
@@ -167,7 +172,8 @@ class UpdateUserView(APIView):
             return Response({ 'error': 'Algo salió mal al actualizar el perfil' })
 
 class ListUserView(APIView):
-    permission_classes = (permissions.AllowAny, )
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    #permission_classes = [AllowAnyUser, ]
     def get(self, request, format=None):
         
         try:
@@ -176,4 +182,3 @@ class ListUserView(APIView):
             return Response(employee.data)
         except:
             return Response({ 'error': 'Algo salió mal al listar los Usuarios' })
-

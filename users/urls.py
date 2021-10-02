@@ -15,9 +15,7 @@ urlpatterns = [
     path('csrf_cookie/', GetCSRFToken.as_view()),
     path('users_employee/', GetUserView.as_view()),
     path('update/', UpdateUserView.as_view()),
-    path('user/list/', ListUserView.as_view())
-]
-
-urlpatterns += [
+    path('list/', ListUserView.as_view()),
+    path('user/list/', ListUserView.as_view()),
     path('api-token-auth/', CustomAuthToken.as_view())
 ]
