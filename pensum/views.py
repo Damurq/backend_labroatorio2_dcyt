@@ -19,16 +19,13 @@ from pensum.serializers import *
 #PROGRAM
 #LISTADO
 class ProgramListAPIView(generics.ListAPIView):
-    
     serializer_class = ProgramSerializer
-
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter(is_active = True)
 
 #CREAR
 class ProgramCreateAPIView(generics.CreateAPIView):
     serializer_class = ProgramSerializer
-
     def post(self,request):
         serializer = self.serializer_class(data = request.data)
         if serializer.is_valid():
@@ -40,7 +37,6 @@ class ProgramCreateAPIView(generics.CreateAPIView):
 #CONSULTA ESPECIFICA
 class ProgramDetailAPIView(generics.RetrieveAPIView):
     serializer_class = ProgramSerializer
-
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
 

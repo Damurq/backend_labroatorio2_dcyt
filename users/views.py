@@ -8,7 +8,23 @@ from rest_framework.response import Response
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect, csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib import auth
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
 
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        employee = user.employee
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'token': token.key,
+            'name': employee.first_name +" "+employee.last_name,
+            'role': employee.role,
+            'photo': str(employee.photo),
+        })
 #---------------------Vistas Genericas------------------------------
 class EmployeeList(generics.ListCreateAPIView):
     queryset = Employee.objects.all()

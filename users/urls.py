@@ -17,3 +17,7 @@ urlpatterns = [
     path('update/', UpdateUserView.as_view()),
     path('user/list/', ListUserView.as_view())
 ]
+
+urlpatterns += [
+    path('api-token-auth/', CustomAuthToken.as_view())
+]
