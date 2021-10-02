@@ -1,23 +1,29 @@
 from users.models import Employee
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_protect
+from django.utils.decorators import method_decorator
+from rest_framework.views import APIView
 
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework import permissions
 
 from rest_framework import generics
 from rest_framework.serializers import Serializer
 
+from rest_framework.parsers import FormParser,MultiPartParser
+
 from pensum.models import *
 from pensum.serializers import *
 
-from users.permissions import IsAuthenticatedAndAdminUser, IsAuthenticatedAndNotAdminUser, AllowAnyUser
+from users.permissions import *
 
 #PROGRAM
 #LISTADO
 class ProgramListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
-    serializer_class = ProgramSerializer
 
+    serializer_class = ProgramSerializer
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter(is_active = True)
 
@@ -25,7 +31,6 @@ class ProgramListAPIView(generics.ListAPIView):
 class ProgramCreateAPIView(generics.CreateAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
     serializer_class = ProgramSerializer
-
     def post(self,request):
         serializer = self.serializer_class(data = request.data)
         if serializer.is_valid():
@@ -33,10 +38,10 @@ class ProgramCreateAPIView(generics.CreateAPIView):
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
+
 #CONSULTA ESPECIFICA
 class ProgramDetailAPIView(generics.RetrieveAPIView):
     serializer_class = ProgramSerializer
-
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter()
 
@@ -130,12 +135,18 @@ class PensumListaAPIView(generics.ListAPIView):
 #CREAR
 class PensumCreateAPIView(generics.CreateAPIView):
     serializer_class = PensumSerializer
-
+    parser_classes = [MultiPartParser,FormParser]
     def post(self,request):
+        print("here")
         serializer = self.serializer_class(data = request.data)
+        print(str(request.data))
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
+        # else:
+        #     print("ya tu sabes")
+        #     return Response(serializer.data, status = status.HTTP_201_CREATED)
+        print(serializer.is_valid())
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
 #CONSULTA ESPECIFICA
