@@ -1,22 +1,16 @@
-from users.models import Employee
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.utils.decorators import method_decorator
-from rest_framework.views import APIView
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import permissions
-
 from rest_framework import generics
-from rest_framework.serializers import Serializer
-
 from rest_framework.parsers import FormParser,MultiPartParser
 
+from users.models import Employee
 from pensum.models import *
-from pensum.serializers import *
-
 from users.permissions import *
+from pensum.serializers import *
 
 class ProgramList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
@@ -71,6 +65,36 @@ class PensumList(generics.ListCreateAPIView):
             except:
                 return Response({ 'error': 'Algo salió mal al listar los pensum' })
 
+
+#LISTADO2
+class PensumListaAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    def get(self, request, format=None):
+        user = self.request.user
+        emp=Employee.objects.get(user=user.id)
+        
+        try:    
+            pensum= Pensum.objects.all()
+            pensum= PensumSerializer(pensum,many=True)
+            return Response(pensum.data)
+        except:
+            return Response({ 'error': 'Algo salió mal al listar los pensum' })
+            
+    permission_classes = [IsAuthenticatedAndGestorUser, ]
+    def get(self, request, format=None):
+        user = self.request.user
+        try:
+                emp=Employee.objects.get(user=user.id)
+                pensum=Pensum.objects.filter(program_code=emp.program_code)
+                pensum = PensumSerializer(pensum, many=True)
+                return Response(pensum.data)
+        except:
+                return Response({ 'error': 'Algo salió mal al listar los pensum' })
+			
+#CREAR
+class PensumCreateAPIView(generics.CreateAPIView):
+    serializer_class = PensumSerializer
+    parser_classes = [MultiPartParser,FormParser]
     def post(self,request):
         serializer = self.serializer_class(data = request.data)
         if serializer.is_valid():
