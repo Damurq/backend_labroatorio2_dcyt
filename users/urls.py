@@ -5,7 +5,7 @@ from .views import *
 urlpatterns = [
     path('csrf_cookie/', GetCSRFToken.as_view()),
     path('login/', LoginView.as_view()),
-    path('checkAuthenticated',CheckAuthenticatedView),
+    path('checkAuthenticated',CheckAuthenticatedView.as_view(), name = 'CheckAuthenticatedView'),
     path('logout/', LogoutView.as_view()),
     path('users/', UserList.as_view(), name = 'user_list'),
     path('users/<int:pk>/', UserDetail.as_view(), name = 'user_create'),
