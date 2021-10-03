@@ -1,28 +1,21 @@
-from users.models import Employee
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.utils.decorators import method_decorator
-from rest_framework.views import APIView
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework import permissions
-
 from rest_framework import generics
-from rest_framework.serializers import Serializer
-
 from rest_framework.parsers import FormParser,MultiPartParser
 
+from users.models import Employee
 from pensum.models import *
-from pensum.serializers import *
-
 from users.permissions import *
+from pensum.serializers import *
 
 #PROGRAM
 #LISTADO
 class ProgramListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
-
     serializer_class = ProgramSerializer
     def get_queryset(self):
         return self.get_serializer().Meta.model.objects.filter(is_active = True)
@@ -122,7 +115,7 @@ class PensumListaAPIView(generics.ListAPIView):
         except:
             return Response({ 'error': 'Algo salió mal al listar los pensum' })
             
-    permission_classes = [IsAuthenticatedAndNotAdminUser, ]
+    permission_classes = [IsAuthenticatedAndGestorUser, ]
     def get(self, request, format=None):
         user = self.request.user
         try:
