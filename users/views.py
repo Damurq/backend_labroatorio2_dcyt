@@ -75,13 +75,11 @@ class CheckAuthenticatedView(APIView):
         }
     """
     def get(self, request, format=None):
-        user = self.request.user
-        print(user)
-        print(request.user)
+        print("here")
+        user = request.user
         try:
             isAuthenticated = user.is_authenticated
             if isAuthenticated:
-                print("here")
                 employee = user.employee
                 return Response({
                     'isAuthenticated': 'success',
@@ -90,7 +88,6 @@ class CheckAuthenticatedView(APIView):
                     'photo': str(employee.photo),
                     })
             else:
-                print("here")
                 return Response({'isAuthenticated': 'error'})
         except:
             return Response({'error': 'Something went wrong when checking authentication status'})
