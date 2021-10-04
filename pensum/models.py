@@ -17,8 +17,8 @@ class Pensum(models.Model):
     description = models.CharField(max_length=1000, unique=True)
     program_code = models.ForeignKey(Program, on_delete= models.CASCADE)
     file_pdf = models.FileField(upload_to= 'pensum', null = False)
-    expiration_date = models.DateField(auto_now =False, auto_now_add=False, blank=True, null=True)
-    date_issue = models.DateField(auto_now =False, auto_now_add=True)
+    expiration_date = models.DateField(auto_now =False, auto_now_add=False)
+    date_issue = models.DateField(auto_now =False, auto_now_add=False)
     is_active = models.BooleanField(default = True)                                            
     def __str__(self):
         return str(self.code)

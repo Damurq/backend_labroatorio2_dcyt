@@ -40,8 +40,6 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    'corsheaders',
-    'rest_framework.authtoken',
 	'rest_framework',
 ]
 
@@ -53,12 +51,10 @@ LOCAL_APPS = [
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    "corsheaders.middleware.CorsPostCsrfMiddleware" , 
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -147,23 +143,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 RET_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES":[
-        'rest_framework.permissions.IsAuthenticated',
+        "rest_framefork.permissions.IsAuthenticated"
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": {
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-    },
-    "DEFAULT_PARSER_CLASSES": (
-        'rest_framework.parsers.FormParser',
-        'rest_framework.parsers.MultiPartParser'
-     )
+        "rest_framefork.authentication.SessionAuthentication"
+    }
 }
 
-# Una lista de hosts que son orígenes confiables para solicitudes inseguras 
-CSRF_TRUSTED_ORIGINS = ['localhost:3000']
-# es un valor verdadero o falso. Por lo tanto, su valor determina si el servidor permite cookies en las solicitudes HTTP entre sitios.
-CORS_ALLOW_CREDENTIALS = True
-# es la lista de orígenes autorizados para realizar solicitudes. Por ejemplo, a continuación, he especificado cuatro orígenes:
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-] 
+CORS_ORIGIN_ALLOW_ALL = True
