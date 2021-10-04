@@ -12,6 +12,35 @@ from pensum.models import *
 from users.permissions import *
 from pensum.serializers import *
 
+class PensumList(generics.ListCreateAPIView):
+    """
+
+    Args:
+        generics ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    queryset = Pensum.objects.all()
+    serializer_class = PensumSerializer
+    def get(self, request, format=None):
+        emp = request.user.employee
+        if emp.role=="A":
+            pensum= Pensum.objects.all()
+            pensum= PensumSerializer(pensum,many=True)
+            return Response(pensum.data)
+        elif emp.role=="G": 
+            try:
+                
+                pensum=Pensum.objects.filter(program_code=emp.program_code)
+                pensum = PensumSerializer(pensum, many=True)
+                return Response(pensum.data)
+            except:
+                return Response({ 'error': 'Algo salió mal al listar los pensum' })
+
+
+
+
 class ProgramList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
     queryset = Program.objects.all()
@@ -45,25 +74,6 @@ class ProgramDetail(generics.RetrieveUpdateDestroyAPIView):
         return Response({'message': 'No existe un programa con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
 
 
-class PensumList(generics.ListCreateAPIView):
-    queryset = Pensum.objects.all()
-    serializer_class = PensumSerializer
-
-    def get(self, request, format=None):
-        user = self.request.user
-        emp=Employee.objects.get(user=user.id)
-        if emp.role=="A":
-            pensum= Pensum.objects.all()
-            pensum= PensumSerializer(pensum,many=True)
-            return Response(pensum.data)
-        elif emp.role=="G": 
-            try:
-                emp=Employee.objects.get(user=user.id)
-                pensum=Pensum.objects.filter(program_code=emp.program_code)
-                pensum = PensumSerializer(pensum, many=True)
-                return Response(pensum.data)
-            except:
-                return Response({ 'error': 'Algo salió mal al listar los pensum' })
 
 
 #LISTADO2
