@@ -16,7 +16,6 @@ urlpatterns = [
     path('user/users_employee/', GetUserView.as_view()),
     path('user/update/', UpdateUserView.as_view()),
     path('user/list/', ListUserView.as_view()),
-    path('user/list/', ListUserView.as_view()),
     path('user/detail/<int:pk>/', UserDetailView.as_view()),
     path('user/update_user/<int:pk>/', UserUpdateView.as_view()),
     path('user/user/<int:pk>/', UserView.as_view()),
