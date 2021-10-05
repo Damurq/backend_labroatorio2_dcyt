@@ -12,34 +12,6 @@ from pensum.models import *
 from users.permissions import *
 from pensum.serializers import *
 
-class PensumList(generics.ListCreateAPIView):
-    """
-
-    Args:
-        generics ([type]): [description]
-
-    Returns:
-        [type]: [description]
-    """
-    queryset = Pensum.objects.all()
-    serializer_class = PensumSerializer
-    def get(self, request, format=None):
-        emp = request.user.employee
-        if emp.role=="A":
-            pensum= Pensum.objects.all()
-            pensum= PensumSerializer(pensum,many=True)
-            return Response(pensum.data)
-        elif emp.role=="G": 
-            try:
-                
-                pensum=Pensum.objects.filter(program_code=emp.program_code)
-                pensum = PensumSerializer(pensum, many=True)
-                return Response(pensum.data)
-            except:
-                return Response({ 'error': 'Algo salió mal al listar los pensum' })
-
-
-
 
 class ProgramList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
@@ -55,56 +27,68 @@ class ProgramDetail(generics.RetrieveUpdateDestroyAPIView):
     def delete(self, request, pk):
         program = self.get_queryset().filter(code = pk).first()
         if program:
-            if program.is_active == True:
-                pensum = Pensum.objects.filter(program_code = pk, is_active = True).first()
-                pensum.is_active = False
-                pensum.save()
+            pensum_exists = Pensum.objects.filter(program_code = pk).exists()
+            if pensum_exists == False:
+                if program.is_active == True:
+                    program.is_active = False
+                    program.save()
+                    return Response({'message': '¡Programa desactivado correctamente!'}, status = status.HTTP_200_OK)
+                
+                elif program.is_active == False:
+                    program.is_active = True
+                    program.save()
+                    return Response({'message': '¡Programa activado correctamente!'}, status = status.HTTP_200_OK)
 
-                program.is_active = False
-                program.save()
-                return Response({'message': '¡Programa y Pensum asociado desactivados correctamente!'}, status = status.HTTP_200_OK)
-            elif program.is_active == False:
-                pensum = Pensum.objects.filter(program_code = pk, is_active = False).last()
-                pensum.is_active = True
-                pensum.save()
-
-                program.is_active = True
-                program.save()
-                return Response({'message': '¡Programa y ultimo pensum asociado activado correctamente!'}, status = status.HTTP_200_OK)
+            elif pensum_exists == True:
+                if program.is_active == True:
+                    pensum = Pensum.objects.filter(program_code = pk).last()
+                    if pensum.is_active == False:
+                        program.is_active = False
+                        program.save()
+                        return Response({'message': '¡Programa desactivado correctamente!'}, status = status.HTTP_200_OK)
+                       
+                    elif pensum.is_active == True:
+                        pensum.is_active = False
+                        pensum.save()
+                        program.is_active = False
+                        program.save()
+                        return Response({'message': '¡Programa y ultimo Pensum asociado desactivados correctamente!'}, status = status.HTTP_200_OK)
+                elif program.is_active == False:
+                    pensum = Pensum.objects.filter(program_code = pk).last()
+                    if pensum.is_active == True:
+                        program.is_active = True
+                        program.save()
+                        return Response({'message': '¡Programa activado correctamente!'}, status = status.HTTP_200_OK)
+                        
+                    elif pensum.is_active == False:
+                        pensum.is_active = True
+                        pensum.save()
+                        program.is_active = True
+                        program.save()
+                        return Response({'message': '¡Programa y ultimo pensum asociado activados correctamente!'}, status = status.HTTP_200_OK)
+                        
         return Response({'message': 'No existe un programa con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
 
 
+class PensumList(generics.ListCreateAPIView):
+    queryset = Pensum.objects.all()
+    serializer_class = PensumSerializer
 
-
-#LISTADO2
-class PensumListaAPIView(generics.ListAPIView):
-    permission_classes = [IsAuthenticatedAndAdminUser, ]
     def get(self, request, format=None):
-        user = self.request.user
-        emp=Employee.objects.get(user=user.id)
-        
-        try:    
+        emp = request.user.employee
+        if emp.role=="A":
             pensum= Pensum.objects.all()
             pensum= PensumSerializer(pensum,many=True)
             return Response(pensum.data)
-        except:
-            return Response({ 'error': 'Algo salió mal al listar los pensum' })
-            
-    permission_classes = [IsAuthenticatedAndGestorUser, ]
-    def get(self, request, format=None):
-        user = self.request.user
-        try:
-                emp=Employee.objects.get(user=user.id)
+        elif emp.role=="G": 
+            try:
+                
                 pensum=Pensum.objects.filter(program_code=emp.program_code)
                 pensum = PensumSerializer(pensum, many=True)
                 return Response(pensum.data)
-        except:
+            except:
                 return Response({ 'error': 'Algo salió mal al listar los pensum' })
-			
-#CREAR
-class PensumCreateAPIView(generics.CreateAPIView):
-    serializer_class = PensumSerializer
-    parser_classes = [MultiPartParser,FormParser]
+
     def post(self,request):
         serializer = self.serializer_class(data = request.data)
         if serializer.is_valid():
