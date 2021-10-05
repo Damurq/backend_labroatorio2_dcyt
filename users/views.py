@@ -94,6 +94,7 @@ class CheckAuthenticatedView(APIView):
 class LogoutView(APIView):
     def get(self, request, format=None):
         # simply delete the token to force a login
+        print("aca")
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
 
