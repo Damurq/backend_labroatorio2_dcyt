@@ -75,7 +75,6 @@ class CheckAuthenticatedView(APIView):
         }
     """
     def get(self, request, format=None):
-        print("here")
         user = request.user
         try:
             isAuthenticated = user.is_authenticated
