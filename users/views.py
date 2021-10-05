@@ -122,8 +122,7 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 
 # ---------------------Vistas Personalizadas------------------------------
 
-
-
+#REGISTRAR USUARIO
 @method_decorator(csrf_protect, name='dispatch')
 class SignupView(APIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
@@ -170,10 +169,7 @@ class SignupView(APIView):
         else:
             return Response({'error': 'Las contraseñas no coinciden'})
 
-
-
-
-
+#ELIMINAR PERFIL USUARIO LOGUEADO
 class DeleteAccountView(APIView):
     def delete(self, request, format=None):
         user = self.request.user
@@ -183,7 +179,7 @@ class DeleteAccountView(APIView):
         except:
             return Response({'error': 'Se produjo un error al intentar eliminar al usuario'})
 
-
+#CONSULTAR PERFIL USUARIO LOGUEADO
 class GetUserView(APIView):
     def get(self, request, format=None):
         try:
@@ -196,7 +192,7 @@ class GetUserView(APIView):
         except:
             return Response({'error': 'Algo salió mal al recuperar el perfil'})
 
-
+#MODIFICAR PERFIL USUARIO LOGUEADO
 class UpdateUserView(APIView):
     def put(self, request, format=None):
         try:
@@ -212,11 +208,9 @@ class UpdateUserView(APIView):
         except:
             return Response({'error': 'Algo salió mal al actualizar el perfil'})
 
-
+#LISTAR USUARIOS
 class ListUserView(APIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
-    #permission_classes = [AllowAnyUser, ]
-
     def get(self, request, format=None):
 
         try:
@@ -225,3 +219,55 @@ class ListUserView(APIView):
             return Response(employee.data)
         except:
             return Response({'error': 'Algo salió mal al listar los Usuarios'})
+
+#ACTIVAR/DESACTIVAR USUARIO
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+
+    def delete(self, request, pk):
+        employee = Employee.objects.get(code = pk)
+        if employee:
+            if employee.status == True:
+                Employee.objects.filter(code = pk).update(status='False')
+                User.objects.filter(id=employee.user_id).update(is_active='False')
+                return Response({'success': 'Usuario desactivado exitosamente'})
+            elif employee.status == False:
+                Employee.objects.filter(code = pk).update(status='True')
+                User.objects.filter(id=employee.user_id).update(is_active='True')
+                return Response({'success': 'Usuario activado exitosamente'})
+        return Response({'error': 'No existe un Usuario con esos datos'})
+
+#MODIFICAR USUARIO
+class UserUpdateView(APIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+
+    def put(self, request, pk):
+        employee = Employee.objects.get(code = pk)
+        if employee:
+            data = self.request.data
+            first_name = data['first_name']
+            last_name = data['last_name']
+            program_code = data['program_code']
+            role = data['role']
+            address = data['address']
+            phone = data['phone']
+            photo = data['photo']
+
+            Employee.objects.filter(code = pk).update(first_name=first_name, last_name=last_name, program_code=program_code, role=role, address=address, phone=phone, photo=photo)
+            emp = Employee.objects.get(code = pk)
+            emp = EmployeeSerializer(emp)
+            return Response({ 'Users': emp.data})
+        else:
+            return Response({ 'error': 'El usuario a modificar no existe' })
+
+#CONSULTAR USUARIO ESPECIFICO
+class UserView(APIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    def get(self, request, pk):
+        
+        try:
+            emp = Employee.objects.get(code = pk)
+            emp = EmployeeSerializer(emp)
+            return Response({ 'Users': emp.data})
+        except:
+            return Response({ 'error': 'Algo salió mal mostrar el Usuario' })
