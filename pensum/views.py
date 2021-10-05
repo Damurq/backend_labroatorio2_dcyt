@@ -89,24 +89,25 @@ class PensumList(generics.ListCreateAPIView):
             except:
                 return Response({ 'error': 'Algo salió mal al listar los pensum' })
 
-    def post(self,request):
-        serializer = self.serializer_class(data = request.data)
-        if serializer.is_valid():
-            codeP = request.data['program_code']
-            active_code_program = Program.objects.filter(is_active = False, code = codeP).first()
-            if active_code_program:
-                return Response({'message': 'el programa asociado al pensum se encuentra inactivo'}, status = status.HTTP_400_BAD_REQUEST)
-            else:
-                pensum_anterior = Pensum.objects.filter(is_active = True, program_code = codeP).first()
-                if pensum_anterior:
-                    pensum_anterior.is_active = False
-                    pensum_anterior.save()
-                    serializer.save()
-                    return Response(serializer.data, status = status.HTTP_201_CREATED)
-                else:
-                    serializer.save()
-                    return Response(serializer.data, status = status.HTTP_201_CREATED)
-        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+    def post(self, request, format=None):
+        data = self.request.data
+        program_code= data['program_code']
+        file_pdf= data['file_pdf']
+        description=data['description']
+        if Program.objects.filter(code=program_code).exists():
+            program=Program.objects.get(code=program_code)
+            pensum = Pensum.objects.create(
+                  description=description,
+                  program_code=program,
+                  file_pdf=file_pdf,
+                  expiration_date="2020-05-12",
+                  date_issue="2030-16-04",
+                  is_active="True"
+                        )
+            pensum.save()
+            return Response({ 'success': 'Usuario creado con exito' })
+        else:
+            return Response({ 'error': 'El correo ya existe' })
             
 
 
@@ -126,6 +127,18 @@ class PensumDetail(generics.RetrieveUpdateDestroyAPIView):
                 pensum.save()
                 return Response({'message': '¡Pensum activado correctamente!'}, status = status.HTTP_200_OK)
         return Response({'message': 'No existe un pensum con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
+    
+    def put(self, request, pk):
+        pensum = Pensum.objects.get(code = pk)
+        if pensum:
+            data = self.request.data
+            file_pdf= data['file_pdf']
+            description=data['description']
+
+            Pensum.objects.filter(code = pk).update(description=description, file_pdf=file_pdf)
+            return Response({ 'success': 'Pensum modificado con exito' })
+        else:
+            return Response({ 'error': 'El pensum a modificar no existe' })
 
 
 class NumberPensumProgram(generics.RetrieveAPIView):
