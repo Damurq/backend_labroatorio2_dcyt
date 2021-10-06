@@ -6,6 +6,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.parsers import FormParser,MultiPartParser
+from rest_framework import permissions
 
 from users.models import Employee
 from pensum.models import *
@@ -46,7 +47,6 @@ class ProgramDetail(generics.RetrieveUpdateDestroyAPIView):
                         program.is_active = False
                         program.save()
                         return Response({'message': '¡Programa desactivado correctamente!'}, status = status.HTTP_200_OK)
-                       
                     elif pensum.is_active == True:
                         pensum.is_active = False
                         pensum.save()
@@ -91,7 +91,10 @@ class PensumList(generics.ListCreateAPIView):
 
     def post(self, request, format=None):
         data = self.request.data
+        print(data)
         program_code= data['program_code']
+        print(data['file_pdf'])
+        print(type(data['file_pdf']))
         file_pdf= data['file_pdf']
         description=data['description']
         if Program.objects.filter(code=program_code).exists():

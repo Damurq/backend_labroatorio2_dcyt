@@ -218,8 +218,6 @@ class ListUserView(generics.ListCreateAPIView):
             return Response(employee.data)
         except:
             return Response({'error': 'Algo salió mal al listar los Usuarios'})
-
-
     def post(self, request, format=None):
         data = self.request.data
         first_name= data['first_name']

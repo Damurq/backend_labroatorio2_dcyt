@@ -8,6 +8,6 @@ urlpatterns = [
     path('pensum/list/', PensumList.as_view(), name = 'pensum_list'),
     path('pensum/detail/<int:pk>/', PensumDetail.as_view(), name = 'pensum_detail'),
     path('program/numberpensum/<int:pk>/', NumberPensumProgram.as_view(), name = 'program_number_pensum'),
-    path('program/pensum/', ProgramPensumListAPIView.as_view(), name = 'program_pensum'),
+    path('program_pensum/list/', ProgramPensumListAPIView.as_view(), name = 'program_pensum'),
     
 ]
