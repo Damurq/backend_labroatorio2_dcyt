@@ -94,7 +94,6 @@ class CheckAuthenticatedView(APIView):
 class LogoutView(APIView):
     def get(self, request, format=None):
         # simply delete the token to force a login
-        print("aca")
         request.user.auth_token.delete()
         return Response(status=status.HTTP_200_OK)
 
@@ -127,48 +126,45 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 @method_decorator(csrf_protect, name='dispatch')
 class SignupView(APIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
-
     def post(self, request, format=None):
         data = self.request.data
-        first_name = data['first_name']
-        last_name = data['last_name']
-        address = data['address']
+        first_name= data['first_name']
+        last_name= data['last_name']
+        address=data['address']
         program_code = data['program_code']
         role = data['role']
-        phone = data['phone']
+        phone=data['phone']
+        photo=data['photo']
         email = data['email']
         password = data['password']
-        re_password = data['re_password']
+        re_password  = data['re_password']
         """Validamos que las contraseñas sean iguales"""
         if password == re_password:
-            """Validamos que el usuario no exista"""
-            if User.objects.filter(username=email).exists():
-                return Response({'error': 'El correo ya existe'})
-            else:
-                if len(password) < 6:
-                    return Response({'error': 'La contraseña debe tener al menos 6 caracteres'})
+                """Validamos que el usuario no exista"""
+                if User.objects.filter(username=email).exists():
+                    return Response({ 'error': 'El correo ya existe' })
                 else:
-                    user = User.objects.create_user(
-                        username=email, password=password)
-                    user.save()
-                    user = User.objects.get(id=user.id)
-                    program = Program.objects.get(id=program_code)
-                    emp = Employee.objects.create(
-                        code="",
-                        first_name=first_name,
-                        last_name=last_name,
-                        role=role,
-                        address=address,
-                        phone=phone,
-                        photo="",
-                        estatus="1",
-                        user=user,
-                        program_code=program
-                    )
-                    emp.save()
-                    return Response({'success': 'Usuario creado con exito'})
+                    if len(password) < 6:
+                        return Response({ 'error': 'La contraseña debe tener al menos 6 caracteres' })
+                    else:
+                        user = User.objects.create_user(username=email, password=password)
+                        user = User.objects.get(id=user.id) 
+                        program = Program.objects.get(code=program_code) 
+                        emp = Employee.objects.create(
+                            first_name=first_name,
+                            last_name=last_name,
+                            user=user,
+                            program_code=program,
+                            role=role,
+                            address=address,
+                            phone=phone,
+                            photo=photo,
+                            status="True"
+                        )
+                        emp.save()               
+                        return Response({ 'success': 'Usuario creado con exito' })
         else:
-            return Response({'error': 'Las contraseñas no coinciden'})
+            return Response({ 'error': 'Las contraseñas no coinciden' })
 
 #ELIMINAR PERFIL USUARIO LOGUEADO
 class DeleteAccountView(APIView):
@@ -210,8 +206,10 @@ class UpdateUserView(APIView):
             return Response({'error': 'Algo salió mal al actualizar el perfil'})
 
 #LISTAR USUARIOS
-class ListUserView(APIView):
+class ListUserView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
     def get(self, request, format=None):
 
         try:
@@ -221,9 +219,45 @@ class ListUserView(APIView):
         except:
             return Response({'error': 'Algo salió mal al listar los Usuarios'})
 
-#ACTIVAR/DESACTIVAR USUARIO
-class UserDetailView(APIView):
+
+    def post(self, request, format=None):
+        data = self.request.data
+        first_name= data['first_name']
+        last_name= data['last_name']
+        address=data['address']
+        program_code = data['program_code']
+        role = data['role']
+        phone=data['phone']
+        photo=data['photo']
+        email = data['email']
+        password = data['password']
+        if User.objects.filter(username=email).exists():
+            return Response({ 'error': 'El correo ya existe' })
+        else:
+            if len(password) < 6:
+                return Response({ 'error': 'La contraseña debe tener al menos 6 caracteres' })
+            else:
+                        user = User.objects.create_user(username=email, password=password)
+                        user = User.objects.get(id=user.id) 
+                        program = Program.objects.get(code=program_code) 
+                        emp = Employee.objects.create(
+                            first_name=first_name,
+                            last_name=last_name,
+                            user=user,
+                            program_code=program,
+                            role=role,
+                            address=address,
+                            phone=phone,
+                            photo=photo,
+                            status="True"
+                        )
+                        emp.save()               
+                        return Response({ 'success': 'Usuario creado con exito' })
+
+class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
+    queryset = Employee.objects.all()
+    serializer_class = EmployeeSerializer
 
     def delete(self, request, pk):
         employee = Employee.objects.get(code = pk)
@@ -237,6 +271,21 @@ class UserDetailView(APIView):
                 User.objects.filter(id=employee.user_id).update(is_active='True')
                 return Response({'success': 'Usuario activado exitosamente'})
         return Response({'error': 'No existe un Usuario con esos datos'})
+
+    def put(self, request, pk):
+            employee = Employee.objects.get(code = pk)
+            if employee:
+                data = self.request.data
+                address= data['address']
+                phone=data['phone']
+                photo=data['photo']
+                #date_issue=data['date_issue']
+
+                Employee.objects.filter(code = pk).update(address=address, phone=phone, photo=photo)
+                
+                return Response({ 'success': 'Pensum modificado con exito' })
+            else:
+                return Response({ 'error': 'El pensum a modificar no existe' })
 
 #MODIFICAR USUARIO
 class UserUpdateView(APIView):
