@@ -133,8 +133,10 @@ class PensumDetail(generics.RetrieveUpdateDestroyAPIView):
         pensum = Pensum.objects.get(code = pk)
         if pensum:
             data = self.request.data
-            description=data['description']
-            Pensum.objects.filter(code = pk).update(description=description)
+            description=data['description'] 
+            commission_code=data['commission_code'] 
+            program_code=data['program_code']
+            Pensum.objects.filter(code = pk).update(description=description,commission_code=commission_code,program_code=program_code)
             return Response({ 'success': 'Pensum modificado con exito' })
         else:
             return Response({ 'error': 'El pensum a modificar no existe' })
