@@ -93,7 +93,7 @@ class PensumList(generics.ListCreateAPIView):
         data = self.request.data
         program_code= data['program_code']
         commission_code = data['commission_code']
-        file_pdf= data['file_pdf']
+        # file_pdf= data['file_pdf']
         description=data['description']
         if Program.objects.filter(code=program_code).exists():
             program=Program.objects.get(code=program_code)
@@ -102,7 +102,7 @@ class PensumList(generics.ListCreateAPIView):
                   description=description,
                   program_code=program,
                   commission_code=commision,
-                  file_pdf=file_pdf,
+                  # file_pdf=file_pdf,
                   expiration_date="2020-05-12",
                   date_issue="2030-16-04",
                   is_active="True"
@@ -135,10 +135,10 @@ class PensumDetail(generics.RetrieveUpdateDestroyAPIView):
         pensum = Pensum.objects.get(code = pk)
         if pensum:
             data = self.request.data
-            file_pdf= data['file_pdf']
+            # file_pdf= data['file_pdf']
             description=data['description']
-
-            Pensum.objects.filter(code = pk).update(description=description, file_pdf=file_pdf)
+            # Pensum.objects.filter(code = pk).update(description=description, file_pdf=file_pdf)
+            Pensum.objects.filter(code = pk).update(description=description)
             return Response({ 'success': 'Pensum modificado con exito' })
         else:
             return Response({ 'error': 'El pensum a modificar no existe' })
@@ -153,7 +153,6 @@ class CommissionDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
     queryset = Commission.objects.all()
     serializer_class = CommissionSerializer
-
     def delete(self, request, pk):
         commission = self.get_queryset().filter(code = pk).first()
         if commission:

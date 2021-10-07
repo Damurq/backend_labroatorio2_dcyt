@@ -134,7 +134,7 @@ class SignupView(APIView):
         program_code = data['program_code']
         role = data['role']
         phone=data['phone']
-        photo=data['photo']
+        # photo=data['photo']
         email = data['email']
         password = data['password']
         re_password  = data['re_password']
@@ -158,7 +158,7 @@ class SignupView(APIView):
                             role=role,
                             address=address,
                             phone=phone,
-                            photo=photo,
+                            # photo=photo,
                             status="True"
                         )
                         emp.save()               

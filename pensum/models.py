@@ -26,7 +26,7 @@ class Pensum(models.Model):
     description = models.CharField(max_length=1000, unique=True)
     program_code = models.ForeignKey(Program, on_delete= models.CASCADE)
     commission_code = models.ForeignKey(Commission, on_delete= models.CASCADE)#esto lo agregueee
-    file_pdf = models.FileField(upload_to= 'pensum', null = False)
+    file_pdf = models.FileField(upload_to= 'pensum', default='pensum/AnalisisdeSistemas.pdf')
     expiration_date = models.DateField(auto_now =False, auto_now_add=False, blank=True, null=True)
     date_issue = models.DateField(auto_now =False, auto_now_add=True)
     is_active = models.BooleanField(default = True)                                            
