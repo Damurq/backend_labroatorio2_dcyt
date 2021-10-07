@@ -226,16 +226,16 @@ class ListUserView(generics.ListCreateAPIView):
         program_code = data['program_code']
         role = data['role']
         phone=data['phone']
-        photo=data['photo']
-        email = data['email']
+        # photo=data['photo']
+        username = data['username']
         password = data['password']
-        if User.objects.filter(username=email).exists():
+        if User.objects.filter(username=username).exists():
             return Response({ 'error': 'El correo ya existe' })
         else:
             if len(password) < 6:
                 return Response({ 'error': 'La contraseña debe tener al menos 6 caracteres' })
             else:
-                        user = User.objects.create_user(username=email, password=password)
+                        user = User.objects.create_user(username=username, password=password)
                         user = User.objects.get(id=user.id) 
                         program = Program.objects.get(code=program_code) 
                         emp = Employee.objects.create(
@@ -246,7 +246,7 @@ class ListUserView(generics.ListCreateAPIView):
                             role=role,
                             address=address,
                             phone=phone,
-                            photo=photo,
+                            # photo=photo,
                             status="True"
                         )
                         emp.save()               
