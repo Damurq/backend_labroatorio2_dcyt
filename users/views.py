@@ -134,7 +134,6 @@ class SignupView(APIView):
         program_code = data['program_code']
         role = data['role']
         phone=data['phone']
-        # photo=data['photo']
         email = data['email']
         password = data['password']
         re_password  = data['re_password']
@@ -158,7 +157,6 @@ class SignupView(APIView):
                             role=role,
                             address=address,
                             phone=phone,
-                            # photo=photo,
                             status="True"
                         )
                         emp.save()               
@@ -226,7 +224,6 @@ class ListUserView(generics.ListCreateAPIView):
         program_code = data['program_code']
         role = data['role']
         phone=data['phone']
-        # photo=data['photo']
         username = data['username']
         password = data['password']
         if User.objects.filter(username=username).exists():
@@ -246,7 +243,6 @@ class ListUserView(generics.ListCreateAPIView):
                             role=role,
                             address=address,
                             phone=phone,
-                            # photo=photo,
                             status="True"
                         )
                         emp.save()               
