@@ -87,28 +87,44 @@ class PensumList(generics.ListCreateAPIView):
                 pensum = PensumSerializer(pensum, many=True)
                 return Response(pensum.data)
             except:
-                return Response({ 'error': 'Algo salió mal al listar los pensum' })
+                return Response({ 'error': 'Algo salió mal al listar los pensum' }, status = status.HTTP_400_BAD_REQUEST)
 
     def post(self, request, format=None):
         data = self.request.data
         program_code= data['program_code']
         commission_code = data['commission_code']
         description=data['description']
-        if Program.objects.filter(code=program_code).exists():
-            program=Program.objects.get(code=program_code)
-            commision = Commission.objects.get(code = commission_code)
-            pensum = Pensum.objects.create(
-                  description=description,
-                  program_code=program,
-                  commission_code=commision,
-                  expiration_date="2020-05-12",
-                  date_issue="2030-16-04",
-                  is_active="True"
-                        )
-            pensum.save()
-            return Response({ 'success': 'Pensum creado con exito' })
-        else:
-            return Response({ 'error': 'El Pensum ya existe' })
+        try: 
+            emp = request.user.employee
+            if emp.role=="A":
+                if Program.objects.filter(code=program_code).exists():
+                    program=Program.objects.get(code=program_code)
+                    commision = Commission.objects.get(code = commission_code)
+                    pensum = Pensum.objects.create(
+                        description=description,
+                        program_code=program,
+                        commission_code=commision,
+                        expiration_date="2022-05-12",
+                                )
+                    pensum.save()
+                    return Response({ 'success': 'Pensum creado con exito' })
+                else:
+                    return Response({ 'error': 'El Pensum ya existe' }, status = status.HTTP_400_BAD_REQUEST)
+            elif emp.role=="G": 
+                program = emp.program_code
+                description=data['description']
+                commision = Commission.objects.get(code = commission_code)
+                pensum = Pensum.objects.create(
+                    description=description,
+                    program_code=program,
+                    commission_code=commision,
+                    expiration_date="2022-05-12",
+                            )
+                pensum.save()
+                return Response({ 'success': 'Pensum creado con exito' })
+        except Exception as error:
+            print(error)
+            return Response({ 'error': 'Algo salió mal' }, status = status.HTTP_400_BAD_REQUEST)
             
 
 
@@ -143,7 +159,7 @@ class PensumDetail(generics.RetrieveUpdateDestroyAPIView):
 
 #-------------------VISTAS ASOCIADAS A COMISION--------------------------------
 class CommisionList(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    permission_classes = [IsAuthenticatedAndAdminUser|IsAuthenticatedAndGestorUser, ]
     queryset = Commission.objects.all()
     serializer_class = CommissionSerializer
 
