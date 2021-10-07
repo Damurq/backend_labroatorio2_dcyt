@@ -91,26 +91,26 @@ class PensumList(generics.ListCreateAPIView):
 
     def post(self, request, format=None):
         data = self.request.data
-        print(data)
         program_code= data['program_code']
-        print(data['file_pdf'])
-        print(type(data['file_pdf']))
+        commission_code = data['commission_code']
         file_pdf= data['file_pdf']
         description=data['description']
         if Program.objects.filter(code=program_code).exists():
             program=Program.objects.get(code=program_code)
+            commision = Commission.objects.get(code = commission_code)
             pensum = Pensum.objects.create(
                   description=description,
                   program_code=program,
+                  commission_code=commision,
                   file_pdf=file_pdf,
                   expiration_date="2020-05-12",
                   date_issue="2030-16-04",
                   is_active="True"
                         )
             pensum.save()
-            return Response({ 'success': 'Usuario creado con exito' })
+            return Response({ 'success': 'Pensum creado con exito' })
         else:
-            return Response({ 'error': 'El correo ya existe' })
+            return Response({ 'error': 'El Pensum ya existe' })
             
 
 
