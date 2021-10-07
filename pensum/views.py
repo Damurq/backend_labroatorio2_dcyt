@@ -13,7 +13,7 @@ from pensum.models import *
 from users.permissions import *
 from pensum.serializers import *
 
-
+#----------------------VISTAS ASOCIADAS A PROGRAMA---------------------
 class ProgramList(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
     queryset = Program.objects.all()
@@ -69,7 +69,7 @@ class ProgramDetail(generics.RetrieveUpdateDestroyAPIView):
                         
         return Response({'message': 'No existe un programa con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
 
-
+#-----------------VISTAS ASOCIADAS A PENSUM------------------
 class PensumList(generics.ListCreateAPIView):
     queryset = Pensum.objects.all()
     serializer_class = PensumSerializer
@@ -91,26 +91,26 @@ class PensumList(generics.ListCreateAPIView):
 
     def post(self, request, format=None):
         data = self.request.data
-        print(data)
         program_code= data['program_code']
-        print(data['file_pdf'])
-        print(type(data['file_pdf']))
+        commission_code = data['commission_code']
         file_pdf= data['file_pdf']
         description=data['description']
         if Program.objects.filter(code=program_code).exists():
             program=Program.objects.get(code=program_code)
+            commision = Commission.objects.get(code = commission_code)
             pensum = Pensum.objects.create(
                   description=description,
                   program_code=program,
+                  commission_code=commision,
                   file_pdf=file_pdf,
                   expiration_date="2020-05-12",
                   date_issue="2030-16-04",
                   is_active="True"
                         )
             pensum.save()
-            return Response({ 'success': 'Usuario creado con exito' })
+            return Response({ 'success': 'Pensum creado con exito' })
         else:
-            return Response({ 'error': 'El correo ya existe' })
+            return Response({ 'error': 'El Pensum ya existe' })
             
 
 
@@ -143,7 +143,31 @@ class PensumDetail(generics.RetrieveUpdateDestroyAPIView):
         else:
             return Response({ 'error': 'El pensum a modificar no existe' })
 
+#-------------------VISTAS ASOCIADAS A COMISION--------------------------------
+class CommisionList(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    queryset = Commission.objects.all()
+    serializer_class = CommissionSerializer
 
+class CommissionDetail(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    queryset = Commission.objects.all()
+    serializer_class = CommissionSerializer
+
+    def delete(self, request, pk):
+        commission = self.get_queryset().filter(code = pk).first()
+        if commission:
+            if commission.is_active == True:
+                commission.is_active = False
+                commission.save()
+                return Response({'message': '¡Comision desactivada correctamente!'}, status = status.HTTP_200_OK)
+            elif commission.is_active == False:
+                commission.is_active = True
+                commission.save()
+                return Response({'message': '¡Comision activada correctamente!'}, status = status.HTTP_200_OK)
+        return Response({'message': 'No existe una comision con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
+
+#-----------------------VISTAS ASOCIADAS A REPORTES---------------------------------
 class NumberPensumProgram(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticatedAndAdminUser, ]
     
@@ -169,3 +193,27 @@ class ProgramPensumListAPIView(generics.ListAPIView):
     def get_queryset(self):
         return Pensum.objects.select_related("program_code")
 
+
+class NumberPensumCommission(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    
+    def get(self, request, pk):
+        commission = Commission.objects.filter(code = pk).first()
+
+        if commission:
+            pensum = Pensum.objects.filter(commission_code = pk).count()
+            number_pensum ={
+                'name_commi': commission.name,
+                'count': pensum
+            }
+            count_serializer = CountPensumCommisionSerializer(data = number_pensum)
+            if count_serializer.is_valid():
+                return Response(count_serializer.data, status = status.HTTP_200_OK)
+        return Response({'message': 'No se ha encontrado una comision con esos datos'}, status = status.HTTP_400_BAD_REQUEST)
+
+class CommissionPensumListAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticatedAndAdminUser, ]
+    serializer_class = CommissionPensumSerializer
+
+    def get_queryset(self):
+        return Pensum.objects.select_related("commission_code")

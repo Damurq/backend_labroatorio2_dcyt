@@ -9,5 +9,10 @@ class ProgramAdmin(admin.ModelAdmin):
 class PensumAdmin(admin.ModelAdmin):
     pass
 
+class CommissionAdmin(admin.ModelAdmin):
+    pass
+
+
 admin.site.register(Program, ProgramAdmin)
 admin.site.register(Pensum, PensumAdmin)
+admin.site.register(Commission, CommissionAdmin)

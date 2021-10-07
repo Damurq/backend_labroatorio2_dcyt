@@ -22,3 +22,21 @@ class ProgramPensumSerializer(serializers.ModelSerializer):
 class CountSerializer(serializers.Serializer):
     name_Pro = serializers.CharField(max_length=255)
     count = serializers.IntegerField()
+
+
+class CommissionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Commission
+        fields = '__all__'
+
+class CountPensumCommisionSerializer(serializers.Serializer):
+    name_commi = serializers.CharField(max_length=255)
+    count = serializers.IntegerField()
+
+
+class CommissionPensumSerializer(serializers.ModelSerializer):
+    commission_code= CommissionSerializer()
+
+    class Meta:
+        model = Pensum
+        fields = '__all__'
